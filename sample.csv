@@ -1,0 +1,5 @@
+Name,Math,English,Average
+Alice,85,90,=AVERAGE(B2:C2)
+Bob,75,80,=AVERAGE(B3:C3)
+Charlie,95,88,=AVERAGE(B4:C4)
+Total,=SUM(B2:B4),=SUM(C2:C4),=AVERAGE(D2:D4)
