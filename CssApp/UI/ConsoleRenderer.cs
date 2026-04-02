@@ -11,6 +11,11 @@ public class ConsoleRenderer
 {
     private readonly Worksheet _worksheet;
     private readonly Viewport _viewport;
+    
+    // 編集モード用の状態
+    private bool _isEditMode = false;
+    private string _editModeValue = "";
+    private int _editModeCursorPos = 0;
 
     public ConsoleRenderer(Worksheet worksheet, Viewport viewport)
     {
@@ -123,7 +128,11 @@ public class ConsoleRenderer
             {
                 var cell = _worksheet.GetCell(row, col);
                 int width = _worksheet.GetColumnWidth(col);
-                string displayValue = cell.DisplayValue;
+                
+                // 編集モードの場合は編集中の値を表示、それ以外は通常の値
+                string displayValue = (_isEditMode && row == _viewport.CurrentRow && col == _viewport.CurrentColumn) 
+                    ? _editModeValue 
+                    : cell.DisplayValue;
 
                 // 現在のセルをハイライト
                 bool isCurrentCell = (row == _viewport.CurrentRow && col == _viewport.CurrentColumn);
@@ -145,7 +154,7 @@ public class ConsoleRenderer
                     }
                     sb.Clear();
 
-                    // 背景色を変更
+                    // 背景色を変更（編集モードでも白文字で表示）
                     Console.BackgroundColor = ConsoleColor.DarkBlue;
                     Console.ForegroundColor = ConsoleColor.White;
                     Console.Write(TruncateOrPad(displayValue, width));
@@ -227,6 +236,12 @@ public class ConsoleRenderer
     /// </summary>
     public void RenderEditMode(string editValue, int cursorPosition)
     {
+        // 編集モードの状態を保存
+        _isEditMode = true;
+        _editModeValue = editValue;
+        _editModeCursorPos = cursorPosition;
+        
+        // 画面を再描画
         Render($"EDIT: {editValue}");
         
         // カーソルを編集位置に移動
@@ -245,13 +260,20 @@ public class ConsoleRenderer
                 screenCol += _worksheet.GetColumnWidth(col) + 1;
             }
 
+            // カーソル位置を計算（編集中のテキスト内）
+            int width = _worksheet.GetColumnWidth(_viewport.CurrentColumn);
+            int actualCursorPos = Math.Min(cursorPosition, width - 1);
+            
             // 画面内に収まる場合のみカーソルを設定
-            if (screenCol + cursorPosition < Console.WindowWidth && screenRow < Console.WindowHeight - 1)
+            if (screenCol + actualCursorPos < Console.WindowWidth && screenRow < Console.WindowHeight - 1)
             {
-                Console.SetCursorPosition(screenCol + cursorPosition, screenRow);
+                Console.SetCursorPosition(screenCol + actualCursorPos, screenRow);
                 Console.CursorVisible = true;
             }
         }
+        
+        // 編集モードフラグをリセット
+        _isEditMode = false;
     }
 
     /// <summary>
