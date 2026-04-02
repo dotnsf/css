@@ -1,4 +1,4 @@
-# CSS - Command-Line Spreadsheet
+# CSS - Cli SpreadSheet
 
 コマンドプロンプトで動作する、軽量で高速なスプレッドシートアプリケーションです。
 
@@ -18,7 +18,7 @@
 
 ## インストール
 
-1. `css.exe` をダウンロード
+1. [css.exe](https://github.com/dotnsf/css/raw/refs/heads/main/publish/css.exe) をダウンロード
 2. 任意のフォルダに配置
 3. PATH に追加（オプション）
 
@@ -242,18 +242,7 @@ dotnet run
 
 バグ報告や機能リクエストは Issue でお願いします。
 
-## 今後の予定
 
-- [ ] Undo/Redo 機能
-- [ ] コピー＆ペースト
-- [ ] セルの書式設定
-- [ ] 追加の関数（VLOOKUP など）
-- [ ] マルチシートサポート
+## Copyright
 
-## 変更履歴
-
-### Version 1.0.0 (予定)
-- 初回リリース
-- 基本的なスプレッドシート機能
-- CSV ファイルのサポート
-- 数式と関数のサポート
+2026 [K.Kimura @ Juge.Me](https://github.com/dotnsf/) all rights reserved.
