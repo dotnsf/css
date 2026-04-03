@@ -260,9 +260,11 @@ public class ConsoleRenderer
                 screenCol += _worksheet.GetColumnWidth(col) + 1;
             }
 
-            // カーソル位置を計算（編集中のテキスト内）
+            // カーソル位置を計算（編集中のテキスト内、全角文字を考慮）
             int width = _worksheet.GetColumnWidth(_viewport.CurrentColumn);
-            int actualCursorPos = Math.Min(cursorPosition, width - 1);
+            string textBeforeCursor = editValue.Substring(0, Math.Min(cursorPosition, editValue.Length));
+            int displayWidth = GetDisplayWidth(textBeforeCursor);
+            int actualCursorPos = Math.Min(displayWidth, width - 1);
             
             // 画面内に収まる場合のみカーソルを設定
             if (screenCol + actualCursorPos < Console.WindowWidth && screenRow < Console.WindowHeight - 1)
@@ -306,28 +308,121 @@ public class ConsoleRenderer
     }
 
     /// <summary>
-    /// テキストを中央揃え
+    /// 文字列の表示幅を取得（全角文字は2、半角文字は1としてカウント）
+    /// </summary>
+    private int GetDisplayWidth(string text)
+    {
+        if (string.IsNullOrEmpty(text))
+            return 0;
+
+        int width = 0;
+        foreach (char c in text)
+        {
+            // 全角文字かどうかを判定
+            if (c >= 0x1100 && (
+                c <= 0x115F || // Hangul Jamo
+                c == 0x2329 || c == 0x232A ||
+                (c >= 0x2E80 && c <= 0xA4CF && c != 0x303F) || // CJK
+                (c >= 0xAC00 && c <= 0xD7A3) || // Hangul Syllables
+                (c >= 0xF900 && c <= 0xFAFF) || // CJK Compatibility Ideographs
+                (c >= 0xFE10 && c <= 0xFE19) || // Vertical forms
+                (c >= 0xFE30 && c <= 0xFE6F) || // CJK Compatibility Forms
+                (c >= 0xFF00 && c <= 0xFF60) || // Fullwidth Forms
+                (c >= 0xFFE0 && c <= 0xFFE6) ||
+                (c >= 0x20000 && c <= 0x2FFFD) || // CJK Extension B-F
+                (c >= 0x30000 && c <= 0x3FFFD)))
+            {
+                width += 2; // 全角文字
+            }
+            else
+            {
+                width += 1; // 半角文字
+            }
+        }
+        return width;
+    }
+
+    /// <summary>
+    /// テキストを中央揃え（全角文字対応）
     /// </summary>
     private string CenterText(string text, int width)
     {
-        if (text.Length >= width)
-            return text.Substring(0, width);
+        int displayWidth = GetDisplayWidth(text);
+        
+        if (displayWidth >= width)
+        {
+            // 表示幅が指定幅を超える場合は切り詰める
+            return TruncateToWidth(text, width);
+        }
 
-        int leftPad = (width - text.Length) / 2;
-        int rightPad = width - text.Length - leftPad;
+        int totalPadding = width - displayWidth;
+        int leftPad = totalPadding / 2;
+        int rightPad = totalPadding - leftPad;
+        
         return new string(' ', leftPad) + text + new string(' ', rightPad);
     }
 
     /// <summary>
-    /// テキストを切り詰めるか、パディング
+    /// テキストを切り詰めるか、パディング（全角文字対応）
     /// </summary>
     private string TruncateOrPad(string text, int width)
     {
-        if (text.Length > width)
+        int displayWidth = GetDisplayWidth(text);
+        
+        if (displayWidth > width)
         {
-            return text.Substring(0, width);
+            // 表示幅が指定幅を超える場合は切り詰める
+            return TruncateToWidth(text, width);
         }
-        return text.PadRight(width);
+        else if (displayWidth < width)
+        {
+            // 表示幅が指定幅より小さい場合はパディング
+            return text + new string(' ', width - displayWidth);
+        }
+        
+        return text;
+    }
+
+    /// <summary>
+    /// 指定した表示幅に収まるようにテキストを切り詰める
+    /// </summary>
+    private string TruncateToWidth(string text, int maxWidth)
+    {
+        if (string.IsNullOrEmpty(text))
+            return "";
+
+        var sb = new StringBuilder();
+        int currentWidth = 0;
+
+        foreach (char c in text)
+        {
+            int charWidth = (c >= 0x1100 && (
+                c <= 0x115F ||
+                c == 0x2329 || c == 0x232A ||
+                (c >= 0x2E80 && c <= 0xA4CF && c != 0x303F) ||
+                (c >= 0xAC00 && c <= 0xD7A3) ||
+                (c >= 0xF900 && c <= 0xFAFF) ||
+                (c >= 0xFE10 && c <= 0xFE19) ||
+                (c >= 0xFE30 && c <= 0xFE6F) ||
+                (c >= 0xFF00 && c <= 0xFF60) ||
+                (c >= 0xFFE0 && c <= 0xFFE6) ||
+                (c >= 0x20000 && c <= 0x2FFFD) ||
+                (c >= 0x30000 && c <= 0x3FFFD))) ? 2 : 1;
+
+            if (currentWidth + charWidth > maxWidth)
+                break;
+
+            sb.Append(c);
+            currentWidth += charWidth;
+        }
+
+        // 残りの幅を空白で埋める
+        if (currentWidth < maxWidth)
+        {
+            sb.Append(new string(' ', maxWidth - currentWidth));
+        }
+
+        return sb.ToString();
     }
 
     /// <summary>
