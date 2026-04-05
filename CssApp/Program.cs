@@ -13,7 +13,8 @@ enum AppMode
 {
     Navigation,
     Edit,
-    Command
+    Command,
+    Menu
 }
 
 class Program
@@ -35,6 +36,9 @@ class Program
 
     // コマンドモード用
     private static string _commandText = "";
+
+    // メニューモード用
+    private static int _menuSelectedIndex = 0;
 
     static void Main(string[] args)
     {
@@ -108,6 +112,9 @@ class Program
                     break;
                 case AppMode.Command:
                     HandleCommandInput(key);
+                    break;
+                case AppMode.Menu:
+                    HandleMenuInput(key);
                     break;
             }
         }
@@ -201,6 +208,11 @@ class Program
             case ConsoleKey.Oem1 when key.KeyChar == ':': // コロンキー
             case ConsoleKey.Oem7 when key.KeyChar == ':': // 別のキーボードレイアウト
                 EnterCommandMode();
+                break;
+
+            case ConsoleKey.Oem2 when key.KeyChar == '/': // スラッシュキー
+            case ConsoleKey.Divide when key.KeyChar == '/': // テンキーのスラッシュ
+                EnterMenuMode();
                 break;
 
             case ConsoleKey.Delete:
@@ -395,6 +407,91 @@ class Program
             _renderer.ShowError(ex.Message);
         }
 
+        _mode = AppMode.Navigation;
+        _renderer.Render();
+    }
+
+    static void HandleMenuInput(ConsoleKeyInfo key)
+    {
+        switch (key.Key)
+        {
+            case ConsoleKey.UpArrow:
+            case ConsoleKey.K: // Vi-like
+                if (_menuSelectedIndex > 0)
+                {
+                    _menuSelectedIndex--;
+                    _renderer.RenderMenuMode(_menuSelectedIndex);
+                }
+                break;
+
+            case ConsoleKey.DownArrow:
+            case ConsoleKey.J: // Vi-like
+                if (_menuSelectedIndex < 3) // 0-3 (4 items)
+                {
+                    _menuSelectedIndex++;
+                    _renderer.RenderMenuMode(_menuSelectedIndex);
+                }
+                break;
+
+            case ConsoleKey.Enter:
+                ExecuteMenuSelection();
+                break;
+
+            case ConsoleKey.Escape:
+                CancelMenu();
+                break;
+
+            // ショートカットキー
+            case ConsoleKey.O:
+                _menuSelectedIndex = 0;
+                ExecuteMenuSelection();
+                break;
+
+            case ConsoleKey.W:
+                _menuSelectedIndex = 1;
+                ExecuteMenuSelection();
+                break;
+
+            case ConsoleKey.Q:
+                _menuSelectedIndex = 3;
+                ExecuteMenuSelection();
+                break;
+        }
+    }
+
+    static void EnterMenuMode()
+    {
+        _mode = AppMode.Menu;
+        _menuSelectedIndex = 0;
+        _renderer.RenderMenuMode(_menuSelectedIndex);
+    }
+
+    static void ExecuteMenuSelection()
+    {
+        _mode = AppMode.Command;
+        
+        // 選択されたメニュー項目に応じてコマンドテキストを設定
+        switch (_menuSelectedIndex)
+        {
+            case 0: // 読み込み(O)
+                _commandText = "o ";
+                break;
+            case 1: // 保存(W)
+                _commandText = "w ";
+                break;
+            case 2: // 列幅変更(Width)
+                _commandText = "width ";
+                break;
+            case 3: // 終了(Q)
+                _commandText = "q";
+                break;
+        }
+        
+        _renderer.RenderCommandMode(_commandText);
+    }
+
+    static void CancelMenu()
+    {
         _mode = AppMode.Navigation;
         _renderer.Render();
     }

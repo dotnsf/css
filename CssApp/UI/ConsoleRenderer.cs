@@ -308,6 +308,57 @@ public class ConsoleRenderer
     }
 
     /// <summary>
+    /// メニューモードで画面を描画
+    /// </summary>
+    public void RenderMenuMode(int selectedIndex)
+    {
+        Render();
+        
+        // メニュー項目
+        string[] menuItems = new[]
+        {
+            "読み込み(O)",
+            "保存(W)",
+            "列幅変更(Width)",
+            "終了(Q)"
+        };
+        
+        // メニューを画面下部に表示
+        int menuStartRow = Console.WindowHeight - menuItems.Length - 1;
+        
+        // 背景をクリア
+        for (int i = 0; i < menuItems.Length + 1; i++)
+        {
+            Console.SetCursorPosition(0, menuStartRow + i);
+            Console.BackgroundColor = ConsoleColor.DarkCyan;
+            Console.Write(new string(' ', Console.WindowWidth));
+        }
+        
+        // メニュー項目を表示
+        for (int i = 0; i < menuItems.Length; i++)
+        {
+            Console.SetCursorPosition(2, menuStartRow + i);
+            
+            if (i == selectedIndex)
+            {
+                // 選択中の項目をハイライト
+                Console.BackgroundColor = ConsoleColor.White;
+                Console.ForegroundColor = ConsoleColor.Black;
+            }
+            else
+            {
+                Console.BackgroundColor = ConsoleColor.DarkCyan;
+                Console.ForegroundColor = ConsoleColor.White;
+            }
+            
+            Console.Write($" {menuItems[i]} ");
+        }
+        
+        Console.ResetColor();
+        Console.CursorVisible = false;
+    }
+
+    /// <summary>
     /// 文字列の表示幅を取得（全角文字は2、半角文字は1としてカウント）
     /// </summary>
     private int GetDisplayWidth(string text)
