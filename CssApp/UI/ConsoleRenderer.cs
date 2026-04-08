@@ -318,8 +318,9 @@ public class ConsoleRenderer
         string[] menuItems = new[]
         {
             "読み込み(O)",
-            "保存(W)",
-            "列幅変更(Width)",
+            "保存(S)",
+            "新規作成(N)",
+            "列幅変更(W)",
             "終了(Q)"
         };
         

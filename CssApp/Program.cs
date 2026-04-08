@@ -426,7 +426,7 @@ class Program
 
             case ConsoleKey.DownArrow:
             case ConsoleKey.J: // Vi-like
-                if (_menuSelectedIndex < 3) // 0-3 (4 items)
+                if (_menuSelectedIndex < 4) // 0-4 (5 items)
                 {
                     _menuSelectedIndex++;
                     _renderer.RenderMenuMode(_menuSelectedIndex);
@@ -447,13 +447,23 @@ class Program
                 ExecuteMenuSelection();
                 break;
 
-            case ConsoleKey.W:
+            case ConsoleKey.S:
                 _menuSelectedIndex = 1;
                 ExecuteMenuSelection();
                 break;
 
-            case ConsoleKey.Q:
+            case ConsoleKey.N:
+                _menuSelectedIndex = 2;
+                ExecuteMenuSelection();
+                break;
+
+            case ConsoleKey.W:
                 _menuSelectedIndex = 3;
+                ExecuteMenuSelection();
+                break;
+
+            case ConsoleKey.Q:
+                _menuSelectedIndex = 4;
                 ExecuteMenuSelection();
                 break;
         }
@@ -468,26 +478,36 @@ class Program
 
     static void ExecuteMenuSelection()
     {
-        _mode = AppMode.Command;
-        
-        // 選択されたメニュー項目に応じてコマンドテキストを設定
+        // 選択されたメニュー項目に応じて処理を実行
         switch (_menuSelectedIndex)
         {
             case 0: // 読み込み(O)
+                _mode = AppMode.Command;
                 _commandText = "o ";
+                _renderer.RenderCommandMode(_commandText);
                 break;
             case 1: // 保存(W)
+                _mode = AppMode.Command;
                 _commandText = "w ";
+                _renderer.RenderCommandMode(_commandText);
                 break;
-            case 2: // 列幅変更(Width)
+            case 2: // 新規作成(N)
+                // 直接新規作成を実行
+                NewFile();
+                _mode = AppMode.Navigation;
+                _renderer.Render();
+                break;
+            case 3: // 列幅変更(W)
+                _mode = AppMode.Command;
                 _commandText = "width ";
+                _renderer.RenderCommandMode(_commandText);
                 break;
-            case 3: // 終了(Q)
+            case 4: // 終了(Q)
+                _mode = AppMode.Command;
                 _commandText = "q";
+                _renderer.RenderCommandMode(_commandText);
                 break;
         }
-        
-        _renderer.RenderCommandMode(_commandText);
     }
 
     static void CancelMenu()
